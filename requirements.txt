@@ -1,0 +1,8 @@
+numpy
+sympy
+matplotlib
+pytest
+pytest-cov
+coverage
+coveralls
+
