@@ -2,7 +2,7 @@ TU Delft, CrashProofLab, Pressure due to Bird Strike
 ---
 
 Github Actions status:
-
+[![pytest](https://github.com/saullocastro/birdpressure/actions/workflows/pytest.yml/badge.svg)](https://github.com/saullocastro/birdpressure/actions/workflows/pytest.yml)
 
 Coverage status:
 
