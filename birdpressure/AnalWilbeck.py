@@ -1,8 +1,8 @@
-from BirdPressure.Bird import Bird
-from BirdPressure.GridGenerator import GridGenerator
-from BirdPressure.ImpactScenario import ImpactScenario
-from BirdPressure.Timing import Timing
-from BirdPressure.EOS import EOS
+from birdpressure.Bird import Bird
+from birdpressure.GridGenerator import GridGenerator
+from birdpressure.ImpactScenario import ImpactScenario
+from birdpressure.Timing import Timing
+from birdpressure.EOS import EOS
 
 import matplotlib.pyplot as plt
 import numpy as np

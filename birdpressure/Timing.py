@@ -1,5 +1,5 @@
-from BirdPressure.Bird import Bird
-from BirdPressure.ImpactScenario import ImpactScenario
+from birdpressure.Bird import Bird
+from birdpressure.ImpactScenario import ImpactScenario
 
 import matplotlib.pyplot as plt
 import numpy as np

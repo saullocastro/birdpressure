@@ -6,7 +6,6 @@ from BirdPressure.EOS import EOS
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 class AnalBarber(Timing):
 
     def __init__(self, bird: Bird, scenario: ImpactScenario, grid: GridGenerator, eos: EOS, initial_pressure = 101325):

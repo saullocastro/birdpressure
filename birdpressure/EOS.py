@@ -1,4 +1,4 @@
-from BirdPressure.Bird import Bird
+from birdpressure.Bird import Bird
 
 import sympy as sy
 import numpy as np
