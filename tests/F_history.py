@@ -1,9 +1,9 @@
-from BirdPressure.Bird import Bird
-from BirdPressure.ImpactScenario import ImpactScenario
-from BirdPressure.GridGenerator import GridGenerator
-from BirdPressure.EOS import EOS
-from BirdPressure.AnalBarber import AnalBarber
-from BirdPressure.AnalWilbeck import AnalWilbeck
+from birdpressure.Bird import Bird
+from birdpressure.ImpactScenario import ImpactScenario
+from birdpressure.GridGenerator import GridGenerator
+from birdpressure.EOS import EOS
+from birdpressure.AnalBarber import AnalBarber
+from birdpressure.AnalWilbeck import AnalWilbeck
 
 
 

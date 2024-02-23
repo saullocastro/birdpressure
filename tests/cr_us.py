@@ -1,7 +1,7 @@
-from BirdPressure.Bird import Bird
-from BirdPressure.ImpactScenario import ImpactScenario
-from BirdPressure.EOS import EOS
-from BirdPressure.Timing import Timing
+from birdpressure.Bird import Bird
+from birdpressure.ImpactScenario import ImpactScenario
+from birdpressure.EOS import EOS
+from birdpressure.Timing import Timing
 
 import matplotlib.pyplot as plt
 import numpy as np
