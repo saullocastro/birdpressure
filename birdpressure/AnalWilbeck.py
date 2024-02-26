@@ -10,6 +10,16 @@ import numpy as np
 class AnalWilbeck(Timing):
 
     def __init__(self, bird: Bird, impact_scenario: ImpactScenario, grid: GridGenerator, eos: EOS,  initial_pressure = 101325):
+        """
+
+        Parameters
+        ----------
+        bird:
+        impact_scenario
+        grid
+        eos
+        initial_pressure
+        """
         Timing.__init__(self, bird, impact_scenario)
 
         self.initial_pressure = initial_pressure

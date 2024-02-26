@@ -5,6 +5,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class Timing():
+    """Compute impact timing as well as force and pressure history
+
+    Notes
+    -----
+    This class is inherited by AnalWilbeck and AnalBarber to provide timing functions/methods
+
+    Parameters
+    ----------
+    bird: class
+    scenario: class
+
+    Attributes
+    ----------
+    bird: class
+    scenario: class
+    u_s: float or ndarray
+        shock wave velocity [m/s]
+    t_D: float or ndarray
+        total impact duration (squash time) [s]
+    """
+
     def __init__(self, bird: Bird, scenario: ImpactScenario):
         self.bird = bird
         self.scenario = scenario
@@ -15,22 +36,79 @@ class Timing():
 
 
     def find_u_s(self):
+        """Linear hugonoit function to find shock velocity.
+
+        Returns
+        -------
+        u_s: float or ndarray
+            shock wave velocity [m/s]
+        """
         u_s = self.bird.get_sound_speed() + self.bird.get_k() * self.scenario.get_impact_velocity()
         return u_s
 
     def find_t_D(self):
+        """Compute total impact duration.
+
+        Returns
+        -------
+        t_D: float or ndarray
+            total impact duration (squash time) [s]
+        """
         return self.bird.get_length()/self.scenario.get_impact_velocity()
+
     def find_t_c(self, release_wave_velocity):
+        """Compute shock state duration.
+            Parameters
+            ----------
+            release_wave_velocity: float or ndarray
+                Release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
+
+            Returns
+            -------
+            t_D: float
+                total impact duration (squash time) [s]
+        """
 
         if self.check_release_wave_velocity(release_wave_velocity):
-            return self.bird.get_length()/(np.sqrt(release_wave_velocity**2-(self.u_s-self.scenario.get_impact_velocity())**2))
+            self.t_c = self.bird.get_length()/(np.sqrt(release_wave_velocity**2-(self.u_s-self.scenario.get_impact_velocity())**2))
+            return self.t_c
     def find_t_b(self,release_wave_velocity):
-        return self.bird.get_diameter()/(2 * release_wave_velocity )
+        """Compute peak impact pressure duration.
+
+            Parameters
+            ----------
+            release_wave_velocity: float or ndarray
+                Release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
+
+            Returns
+            -------
+            t_D: float
+                total impact duration (squash time) [sec]
+            """
+        self.t_b = self.bird.get_diameter()/(2 * release_wave_velocity )
+        return self.t_b
 
     def critical_aspect_ratio(self,release_wave_velocity):
+        """ Compute critical aspect ratio
+
+            Notes
+            -----
+            May return nothing if release wave velocity is too low
+
+            Parameters
+            ----------
+            release_wave_velocity: float or ndarray
+                Release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
+
+            Returns
+            -------
+            critical_aspect: float or ndarray
+                Critical aspect ratio (L/D) [-]
+        """
 
         if self.check_release_wave_velocity(release_wave_velocity):
-            return self.u_s / (2* np.sqrt(release_wave_velocity ** 2 - (self.u_s - self.scenario.get_impact_velocity()) ** 2))
+            critical_aspect = self.u_s / (2* np.sqrt(release_wave_velocity ** 2 - (self.u_s - self.scenario.get_impact_velocity()) ** 2))
+            return critical_aspect
 
     def det_peak_P(self, use_us = True, use_v_norm = True):
         if use_v_norm:

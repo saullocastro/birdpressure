@@ -4,35 +4,86 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class GridGenerator:
+    """Defines grid and boundary of initial impact area
+
+    Note
+    ----
+    Coordinate system of impact y-z plane:
+                      _ _ _
+                     /  ^  \
+                    |   |y  |
+                    | <-*   |
+                    \_ z_ _/
+    Defining Elements/Cells:
+    (eta_1,zeta_1) *_______*(eta_1,zeta_2)
+                   |   ^   |
+                   |   |y  |
+                   | <-*   |
+    (eta_2,zeta_1) *___z___* (eta_2,zeta_2)
+
+    Parameters
+    ----------
+    bird: class
+    impact_scenario: class
+    n_elements: int
+        number of elements per row/column
+
+    Attributes
+    ----------
+    n_elements: int
+        number of elements per row/column
+    maj_axis: float
+        half the length of elliptical impact area major axis [m]
+    min_axis: float
+        half the length of elliptical impact area major axis [m]
+    nodes: ndarray
+         array containing all coordinates of nodes [y,z] (n_elements+1,2)
+    centers: ndarray
+        array containing all coordinates of element centers [y,z] (n_elements,2)
+    cells_bound: ndarray
+        array representing grid with 1 values for cell/element in bounds (n_elements, n_elements)
+    ids: ndarray
+        array containing element id of all elements withing impact boundary [row, column]
+    corners: ndarray
+        array containing all corner coordinates of elements in boundary [eta_1,eta_2,zeta_1,zeta_2]
+    resolution: float
+        elements size
+    mesh_X: ndarray
+        array created by np.mesh() with x coordinates (n_elements, n_elements)
+    mesh_Y: ndarray
+        array created by np.mesh() with y coordinates (n_elements, n_elements)
+    impact_area: float
+        impact area [m]
+
+    Other Parameters
+    ----------------
+    cells: ndarray
+        array of zeros representing each cell/element in grid (n_elements, n_elements)
+    bound_coord: ndarray
+        coordinates of cell centers within boundary [z,y]
+    """
     def __init__(self, bird: Bird, impact_scenario: ImpactScenario, n_elements: int):
-        """
-        Grid Generator for Bird Impact Simulation
-        :param bird: Bird Class
-        :param impact_scenario: ImpactScenario Class
-        :param n_elements: number of elemts per row/column
-        """
+
         self.n_elements = n_elements
         self.min_axis = bird.get_diameter() / 2
         self.maj_axis = self.min_axis / np.sin(impact_scenario.get_impact_angle())
         self.nodes, cells, self.centers = self.get_grid()
-        cells, self.ids, bound_coord = self.get_bound(cells)
+        self.cells_bound, self.ids, bound_coord = self.get_bound(cells)
         self.corners = self.get_corners(self.nodes)
         self.resolution =  2*self.maj_axis/self.n_elements
         self.mesh_X, self.mesh_Y = np.meshgrid(self.centers[:, 1], self.centers[:, 0])
         self.impact_area = self.ids.shape[0] * self.resolution**2
     def get_grid(self):
-        """
-                This function generates the Grid
+        """ This function generates the Grid
 
-                Params:
-                    - maj_axis (float): this is an angle
-                    - n_elements (integer) : number of elemts per row/column
-
-                Return:
-                    - node (numpy array [n_elements+1, 2]) : coordinates of nodes [y,z]
-                    - cells (numpy array [n_elements, n_elements]): array representing each cell/element in grid
-                    - centers (numpy array [n_elements, 2]): coordinates of centers [y,z]
-
+        Returns
+        -------
+        nodes: ndarray
+            array containing all coordinates of nodes [y,z] (n_elements+1,2)
+        cells: ndarray
+            array representing each cell/element in grid (n_elements, n_elements)
+        centers: ndarray
+            array containing all coordinates of element centers [y,z] (n_elements,2)
         """
 
         z_nodes = np.linspace(-self.maj_axis, self.maj_axis, self.n_elements + 1)
@@ -49,15 +100,21 @@ class GridGenerator:
 
 
     def get_bound(self, cells):
-        """
+        """ This function determines which elements/cells are within impact area
 
         Parameters
         ----------
-        cells
+        cells: ndarray
+            array representing each cell/element in grid (n_elements, n_elements)
 
         Returns
         -------
-
+        cells_bound: ndarray
+            array representing grid with 1 values for cell/element in bounds (n_elements, n_elements)
+        ids: ndarray
+            array containing element id of all elements withing impact boundary [row, column]
+        bound_coord: ndarray
+            coordinates of cell centers within boundary [z,y]
         """
 
         z_coord = []
@@ -91,21 +148,28 @@ class GridGenerator:
 
         ids = np.array(ids)
         bound_coord = np.transpose(np.vstack([y_coord, z_coord]))
+        cells_bound = cells
 
-        return cells, ids, bound_coord
+        return cells_bound, ids, bound_coord
 
 
     def get_cross_ellipse(self, angle):
-        """"
-        Hallo I am Jonas
+        """This function creates coordinates of impact area boundary for given angle from minor axis
 
-        Params:
-            - angle (float): this is an angle
+        Parameters
+        ----------
+        angle: float or ndarray
+            angle from minor axis [rad]
 
-        Return:
-            - lala
-
-        """"
+        Returns
+        -------
+        z: float or ndarray
+            z coord
+        y: float or ndarray
+            y coord
+        r: float or ndarray
+            distance from center
+        """
         r = self.maj_axis * self.min_axis / np.sqrt(
             (self.min_axis * np.sin(angle)) ** 2 + (self.maj_axis * np.cos(angle)) ** 2)
         y = r * np.sin(angle)
@@ -115,15 +179,17 @@ class GridGenerator:
 
 
     def get_corners(self, nodes: np.ndarray):
-        """
+        """Determines corner coord for given element/cell id
 
         Parameters
         ----------
-        nodes
+        nodes: nd.array
+            element/cell id [row, column]
 
         Returns
         -------
-
+        corners: ndarray
+            array containing all corner coordinates of elements in boundary [eta_1,eta_2,zeta_1,zeta_2]
         """
         corners = np.zeros([self.ids.shape[0], 4])
 
@@ -138,9 +204,7 @@ class GridGenerator:
         return corners
 
     def show_grid(self):
-        """
-
-        """
+        """Function that plots grid and impact area."""
         z_el, y_el, r_el = self.get_cross_ellipse(np.linspace(0,2*np.pi,30))
 
 
