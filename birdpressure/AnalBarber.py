@@ -7,22 +7,63 @@ from birdpressure.EOS import EOS
 import matplotlib.pyplot as plt
 import numpy as np
 class AnalBarber(Timing):
+    """ Class for Wilbeck's analytical bird strike solution
+        Parameters
+        ----------
+        bird: class
+        impact_scenario: class
+        grid: class
+        eos: class
+        initial_pressure: int, default: 101325
+            ambient pressure default at sea-level
 
-    def __init__(self, bird: Bird, scenario: ImpactScenario, grid: GridGenerator, eos: EOS, initial_pressure = 101325):
-        Timing.__init__(self, bird, scenario)
+        Attributes
+        ----------
+        bird: class
+        impact_scenario: class
+        grid: class
+        eos: class
+        initial_pressure: int, default: 101325
+            ambient pressure default at sea-level
+        U: ndarray
+            superimposed velocity in x direction [m/s]
+        V: ndarray
+            superimposed velocity in y direction [m/s]
+        W: ndarray
+            superimposed velocity in z direction [m/s]
+        c_p: ndarray
+            array with pressure coefficient over impact area [-]
+        P: ndarray
+            array with pressures over impact area [Pa]
+        f_steady_av: float or ndarray
+            average force exerted during steady state phase [N]
+        P_steady_av: float or ndarray
+            average force exerted during steady state phase [Pa]
+        P_H: float or ndarray
+            peak pressure (hugonoit pressure) [MPa]
+        c_r: float or ndarray
+            release wave velocity [m/s]
+        t_b: float or ndarray
+            peak impact pressure duration [s]
+        t_c: float or ndarray
+            duration until shocked area dissipates [s]
+    """
+
+    def __init__(self, bird: Bird, impact_scenario: ImpactScenario, grid: GridGenerator, eos: EOS, initial_pressure = 101325):
+        Timing.__init__(self, bird, impact_scenario)
 
         
         self.initial_pressure = initial_pressure
         self.bird = bird
-        self.scenario = scenario
+        self.impact_scenario = impact_scenario
         self.grid = grid
         self.eos = eos
 
-        self.min_axis = self.grid.min_axis
-        self.maj_axis = self.grid.maj_axis
+        #self.min_axis = self.grid.min_axis
+        #self.maj_axis = self.grid.maj_axis
         self.U, self.V, self.W = self.get_UVW()
-        self.c_p = 1 - (self.V ** 2 + self.W ** 2) / (self.scenario.get_impact_velocity() ** 2)
-        self.P = self.c_p * 1 / 2 * self.bird.get_density() * self.scenario.get_impact_velocity() ** 2
+        self.c_p = 1 - (self.V ** 2 + self.W ** 2) / (self.impact_scenario.get_impact_velocity() ** 2)
+        self.P = self.c_p * 1 / 2 * self.bird.get_density() * self.impact_scenario.get_impact_velocity() ** 2
         self.f_steady_av, self.P_steady_av = self.get_averages()
         self.P_H = self.det_peak_P()
         self.c_r = self.eos.get_c_r(self.P_H)
@@ -32,6 +73,7 @@ class AnalBarber(Timing):
 
 
     def get_UVW(self):
+        """Function to compute superimposd velocity in x,y and z direction."""
         uvw = np.zeros([self.grid.ids.shape[0], 3])
         for idx_1, id_cent in enumerate(self.grid.ids):
 
@@ -48,16 +90,19 @@ class AnalBarber(Timing):
                 u, v, w, r_1, r_2, r_3, r_4 = self.get_velocity(x, y, z, eta_1, eta_2, zeta_1, zeta_2)
                 uvw[idx_1, :] += [u, v, w]
 
-        U = self.scenario.get_impact_velocity() * np.sin(self.scenario.get_impact_angle()) + self.scenario.get_impact_velocity() * np.sin(self.scenario.get_impact_angle()) / (
-                2 * np.pi) * uvw[:, 0]
-        V = self.scenario.get_impact_velocity() * np.cos(self.scenario.get_impact_angle()) + self.scenario.get_impact_velocity() * np.sin(self.scenario.get_impact_angle()) / (
-                2 * np.pi) * uvw[:, 1]
-        W = self.scenario.get_impact_velocity() * np.sin(self.scenario.get_impact_angle()) / (2 * np.pi) * uvw[:, 2]
+        U = self.impact_scenario.get_impact_velocity() * np.sin(self.impact_scenario.get_impact_angle()) + \
+            self.impact_scenario.get_impact_velocity() * np.sin(self.impact_scenario.get_impact_angle()) / (2 * np.pi) * uvw[:, 0]
+
+        V = self.impact_scenario.get_impact_velocity() * np.cos(self.impact_scenario.get_impact_angle()) + \
+            self.impact_scenario.get_impact_velocity() * np.sin(self.impact_scenario.get_impact_angle()) / (2 * np.pi) * uvw[:, 1]
+
+        W = self.impact_scenario.get_impact_velocity() * np.sin(self.impact_scenario.get_impact_angle()) / (2 * np.pi) * uvw[:, 2]
 
         return U, V, W
 
 
     def get_velocity(self, x, y, z, eta_1, eta_2, zeta_1, zeta_2):
+        """Function to compute velocity field induced by uniformly distributed sources."""
 
         r_1 = np.sqrt(x ** 2 + (y - eta_1) ** 2 + (z - zeta_1) ** 2)
         r_2 = np.sqrt(x ** 2 + (y - eta_2) ** 2 + (z - zeta_1) ** 2)
@@ -80,6 +125,7 @@ class AnalBarber(Timing):
         return u, v, w, r_1, r_2, r_3, r_4
 
     def mesh_results(self, result):
+        """Function to save results in mesh format."""
 
         result_cells = np.zeros_like(self.grid.mesh_X)
 
@@ -89,6 +135,7 @@ class AnalBarber(Timing):
         return result_cells
 
     def plot_result(self, results, results_name: str, result_unit: str):
+        """Function to plot results"""
 
         result_cells = self.mesh_results(results)
 
@@ -104,6 +151,12 @@ class AnalBarber(Timing):
         plt.show()
 
     def get_axis_data(self,result):
+        """Function to plot results along major and minor axis
+
+        Notes
+        -----
+        In order to use this function a grid with uneven number of elements needs to be used.
+        """
         if (self.grid.n_elements%2) == 0:
             print('Error: n_elements needs to be odd to generate axis data')
         else:
@@ -142,6 +195,7 @@ class AnalBarber(Timing):
             return maj_result, maj_ax_val, min_result, min_ax_val
 
     def get_averages(self):
+        """Function to compute steady state average values."""
 
         cell_area = self.grid.resolution**2
         impact_area = cell_area*len(self.P)
@@ -155,6 +209,7 @@ class AnalBarber(Timing):
         return force, average_P
 
     def show_averaged_force_history(self):
+        """Function to plot force history"""
         self.f_peak_av = self.P_H*self.grid.impact_area
         self.f_hist, self.t_hist, self.impulse_tot = self.find_force_history(self.f_peak_av, self.f_steady_av,self.c_r)
         self.plot_f_history(self.f_hist,self.t_hist)

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class Timing():
-    """Compute impact timing as well as force and pressure history
+    """Compute impact timing as well as force history
 
     Notes
     -----
@@ -14,21 +14,21 @@ class Timing():
     Parameters
     ----------
     bird: class
-    scenario: class
+    impact_scenario: class
 
     Attributes
     ----------
     bird: class
-    scenario: class
+    impact_scenario: class
     u_s: float or ndarray
         shock wave velocity [m/s]
     t_D: float or ndarray
         total impact duration (squash time) [s]
     """
 
-    def __init__(self, bird: Bird, scenario: ImpactScenario):
+    def __init__(self, bird: Bird, impact_scenario: ImpactScenario):
         self.bird = bird
-        self.scenario = scenario
+        self.impact_scenario = impact_scenario
 
 
         self.u_s = self.find_u_s()
@@ -43,7 +43,7 @@ class Timing():
         u_s: float or ndarray
             shock wave velocity [m/s]
         """
-        u_s = self.bird.get_sound_speed() + self.bird.get_k() * self.scenario.get_impact_velocity()
+        u_s = self.bird.get_sound_speed() + self.bird.get_k() * self.impact_scenario.get_impact_velocity()
         return u_s
 
     def find_t_D(self):
@@ -54,23 +54,23 @@ class Timing():
         t_D: float or ndarray
             total impact duration (squash time) [s]
         """
-        return self.bird.get_length()/self.scenario.get_impact_velocity()
+        return self.bird.get_length()/self.impact_scenario.get_impact_velocity()
 
     def find_t_c(self, release_wave_velocity):
         """Compute shock state duration.
             Parameters
             ----------
             release_wave_velocity: float or ndarray
-                Release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
+                release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
 
             Returns
             -------
-            t_D: float
-                total impact duration (squash time) [s]
+            t_c: float or ndarray
+                duration until shocked area dissipates [s]
         """
 
         if self.check_release_wave_velocity(release_wave_velocity):
-            self.t_c = self.bird.get_length()/(np.sqrt(release_wave_velocity**2-(self.u_s-self.scenario.get_impact_velocity())**2))
+            self.t_c = self.bird.get_length()/(np.sqrt(release_wave_velocity**2-(self.u_s-self.impact_scenario.get_impact_velocity())**2))
             return self.t_c
     def find_t_b(self,release_wave_velocity):
         """Compute peak impact pressure duration.
@@ -78,12 +78,12 @@ class Timing():
             Parameters
             ----------
             release_wave_velocity: float or ndarray
-                Release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
+                release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
 
             Returns
             -------
-            t_D: float
-                total impact duration (squash time) [sec]
+            t_b: float or ndarray
+                peak impact pressure duration [s]
             """
         self.t_b = self.bird.get_diameter()/(2 * release_wave_velocity )
         return self.t_b
@@ -98,58 +98,105 @@ class Timing():
             Parameters
             ----------
             release_wave_velocity: float or ndarray
-                Release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
+                release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
 
             Returns
             -------
             critical_aspect: float or ndarray
-                Critical aspect ratio (L/D) [-]
+                critical aspect ratio (L/D) [-]
         """
 
         if self.check_release_wave_velocity(release_wave_velocity):
-            critical_aspect = self.u_s / (2* np.sqrt(release_wave_velocity ** 2 - (self.u_s - self.scenario.get_impact_velocity()) ** 2))
+            critical_aspect = self.u_s / (2* np.sqrt(release_wave_velocity ** 2 - (self.u_s - self.impact_scenario.get_impact_velocity()) ** 2))
             return critical_aspect
 
     def det_peak_P(self, use_us = True, use_v_norm = True):
+        """ Compute peak pressure (hugonoit pressure)
+
+            Parameters
+            ----------
+            use_us: bool, default: True
+                decide whether to use shock velocity or speed of sound
+            use_v_norm: bool, default: True
+                decide whether to use normal velocity or impact velocity
+
+            Returns
+            -------
+            P_H: float or ndarray
+                peak pressure [N/m^2]
+
+        """
         if use_v_norm:
-            velocity = self.scenario.get_normal_velocity()
+            velocity = self.impact_scenario.get_normal_velocity()
         else:
-            velocity = self.scenario.get_impact_velocity()
+            velocity = self.impact_scenario.get_impact_velocity()
         if use_us:
-            return self.bird.get_density()*self.u_s*velocity
-        return self.bird.get_density()*self.bird.get_sound_speed()*velocity
-
+            P_H = self.bird.get_density()*self.u_s*velocity
+        else:
+            P_H = self.bird.get_density()*self.bird.get_sound_speed()*velocity
+        return P_H
     def check_release_wave_velocity(self,release_wave_velocity):
-        if type(release_wave_velocity) == int or type(release_wave_velocity) == float or type(release_wave_velocity) == np.float64:
+        """Function to check whether release velocity (c_r) is high enough
 
-            if (self.u_s - self.scenario.get_impact_velocity()) > release_wave_velocity:
-                print('Error, u_s is much higher then c_r. Use different EOS')
+            Parameters
+            ----------
+            release_wave_velocity: float or ndarray
+                release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
+
+            Returns
+            -------
+            bool
+                True if high enough, False if not
+        """
+        check = (self.u_s - self.impact_scenario.get_impact_velocity())
+
+        if isinstance(check,np.ndarray) or isinstance(release_wave_velocity,np.ndarray):
+            if (check > release_wave_velocity).all():
+                print('Error, u_s is much higher then c_r. Use different EOS.')
                 return False
-
             else:
                 return True
 
         else:
-            for idx, cr in enumerate(release_wave_velocity):
-                if (self.u_s - self.scenario.get_impact_velocity())[idx] > cr:
-                    print('Error, u_s is much higher then c_r. Use different EOS')
-                    return False
-                    break
-                else:
-                    return True
+            if check > release_wave_velocity:
+                print('Error, u_s is much higher then c_r. Use different EOS.')
+                return False
+            else:
+                return True
 
 
     def find_force_history(self, f_peak, f_steady, release_wave_velocity):
+        """ Create numpy arrays for force history
+
+            Parameters
+            ----------
+            f_peak: float
+                peak force [N]
+            f_steady: float
+                steady state force [N]
+            release_wave_velocity: float
+                release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
+
+            Returns
+            -------
+            f_history: ndarray
+                numpy array of force history forces
+            t_history: ndarray
+                numpy array of force history time steps
+            j_tot: float
+                total impulse [Ns]
+        """
         self.t_b = self.find_t_b(release_wave_velocity)
 
         f_history = np.array([f_peak, f_peak,f_steady,f_steady])
         t_history = np.array([0,self.t_b,self.t_b, self.t_D])
 
-        j_tot = f_peak * self.t_b + f_steady * (self.t_D-self.t_b)
+        impulse_tot = f_peak * self.t_b + f_steady * (self.t_D-self.t_b)
 
-        return f_history, t_history, j_tot
+        return f_history, t_history, impulse_tot
 
     def plot_f_history(self,f_hist,t_hist):
+        """Function that plots force history """
         cm = 1 / 2.54
         fig, ax = plt.subplots(figsize=(30 * cm, 20 * cm))
 
