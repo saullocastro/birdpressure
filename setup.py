@@ -4,7 +4,7 @@ import subprocess
 from setuptools import setup, find_packages
 
 
-is_released = False
+is_released = True
 version = '0.0.1'
 
 
