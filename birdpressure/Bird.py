@@ -45,7 +45,7 @@ class Bird:
         self.mass = mass
         self.k = k
         self.aspect_ratio = aspect_ratio
-        self.length = (16 / np.pi * self.mass / self.initial_density) ** 1 / 3
+        self.length = (16 *self.mass / (np.pi*self.initial_density)) ** 1 / 3
         self.diameter = self.length / self.aspect_ratio
 
     def to_dict(self):
@@ -77,7 +77,7 @@ class Bird:
         return self.length
 
     def get_mass(self):
-        return self.m
+        return self.mass
 
     def get_sound_speed(self):
         return self.speed_of_sound
