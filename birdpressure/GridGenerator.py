@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class GridGenerator:
-    """Defines grid and boundary of initial impact area
+    r"""Defines grid and boundary of initial impact area
 
     Note
     ----
