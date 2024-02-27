@@ -113,6 +113,7 @@ s = setup(
     packages=find_packages(),
     data_files=data_files,
     long_description=read('README.md'),
+    long_description_content_type = 'text/markdown',
     classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
     install_requires=install_requires,
     include_package_data=True,
