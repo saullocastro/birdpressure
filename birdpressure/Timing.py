@@ -188,8 +188,8 @@ class Timing():
         """
         self.t_b = self.find_t_b(release_wave_velocity)
 
-        f_history = np.array([f_peak, f_peak,f_steady,f_steady])
-        t_history = np.array([0,self.t_b,self.t_b, self.t_D])
+        f_history = np.array([f_peak, f_peak,f_steady,f_steady,0])
+        t_history = np.array([0,self.t_b,self.t_b, self.t_D, self.t_D])
 
         impulse_tot = f_peak * self.t_b + f_steady * (self.t_D-self.t_b)
 
