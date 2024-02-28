@@ -41,12 +41,20 @@ class AnalBarber(Timing):
             average force exerted during steady state phase [Pa]
         P_H: float or ndarray
             peak pressure (hugonoit pressure) [MPa]
+        f_peak_av: float or ndarray
+            force applied during hugonoit state [N]
         c_r: float or ndarray
             release wave velocity [m/s]
         t_b: float or ndarray
             peak impact pressure duration [s]
         t_c: float or ndarray
             duration until shocked area dissipates [s]
+        f_hist: ndarray
+            pressure history force array [N]
+        t_hist: ndarray
+            pressure history time array [s]
+        impulse_tot: float or ndarray
+            total impulse over per impact [Ns]
     """
 
     def __init__(self, bird: Bird, impact_scenario: ImpactScenario, grid: GridGenerator, eos: EOS, initial_pressure = 101325):
@@ -59,16 +67,16 @@ class AnalBarber(Timing):
         self.grid = grid
         self.eos = eos
 
-        #self.min_axis = self.grid.min_axis
-        #self.maj_axis = self.grid.maj_axis
         self.U, self.V, self.W = self.get_UVW()
         self.c_p = 1 - (self.V ** 2 + self.W ** 2) / (self.impact_scenario.get_impact_velocity() ** 2)
         self.P = self.c_p * 1 / 2 * self.bird.get_density() * self.impact_scenario.get_impact_velocity() ** 2
         self.f_steady_av, self.P_steady_av = self.get_averages()
         self.P_H = self.det_peak_P()
+        self.f_peak_av = self.P_H * self.grid.impact_area
         self.c_r = self.eos.get_c_r(self.P_H)
         self.t_b = self.find_t_b(self.c_r)
         self.t_c = self.find_t_c(self.c_r)
+        self.f_hist, self.t_hist, self.impulse_tot = self.find_force_history(self.f_peak_av, self.f_steady_av, self.c_r)
 
 
 
@@ -210,8 +218,6 @@ class AnalBarber(Timing):
 
     def show_averaged_force_history(self):
         """Function to plot force history"""
-        self.f_peak_av = self.P_H*self.grid.impact_area
-        self.f_hist, self.t_hist, self.impulse_tot = self.find_force_history(self.f_peak_av, self.f_steady_av,self.c_r)
         self.plot_f_history(self.f_hist,self.t_hist)
 
 

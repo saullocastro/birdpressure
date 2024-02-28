@@ -30,10 +30,23 @@ class AnalWilbeck(Timing):
             shock wave velocity [m/s]
         P_H: float or ndarray
             peak (hugonoit) pressure [N/m^2]
+        f_peak_av: float or ndarray
+            force applied during hugonoit state [N]
         c_r: float or ndarray
             release wave velocity [m/s]
         P_s: float ndarray
             steady state stagnation point pressure [N/m^2]
+        p_steady_av: float or ndarray
+            average pressure applied during steady state [N/m^2]
+        f_steady_av: float or ndarray
+            force applied during steady state [N]
+        f_hist: ndarray
+            pressure history force array [N]
+        t_hist: ndarray
+            pressure history time array [s]
+        impulse_tot: float or ndarray
+            total impulse over per impact [Ns]
+
     """
 
     def __init__(self, bird: Bird, impact_scenario: ImpactScenario, grid: GridGenerator, eos: EOS,  initial_pressure = 101325):
@@ -47,8 +60,11 @@ class AnalWilbeck(Timing):
 
         self.u_s = self.find_u_s()
         self.P_H = self.det_peak_P()
+        self.f_peak_av = self.P_H * self.grid.impact_area
         self.c_r = self.eos.get_c_r(self.P_H)
         self.P_s = self.get_P_s()
+        self.p_steady_av, self.f_steady_av = self.get_averages()
+        self.f_hist, self.t_hist, self.impulse_tot = self.find_force_history(self.f_peak_av, self.f_steady_av, self.c_r)
 
     def get_averages(self, circular_cross = True):
         """Function to compute average pressure and force during steady state"""
@@ -148,9 +164,6 @@ class AnalWilbeck(Timing):
 
     def show_averaged_force_history(self):
         """Function to plot force history"""
-        self.p_steady_av, self.f_steady_av = self.get_averages()
-        self.f_peak_av = self.P_H*self.grid.impact_area
-        self.f_hist, self.t_hist, self.impulse_tot = self.find_force_history(self.f_peak_av, self.f_steady_av, self.c_r)
         self.plot_f_history(self.f_hist, self.t_hist)
 
 
