@@ -39,7 +39,7 @@ class Bird:
 
     """
 
-    def __init__(self, initial_density=950, speed_of_sound=1482.9, mass=1.814, aspect_ratio=2, k=2):
+    def __init__(self, initial_density=950, speed_of_sound=1482.9, mass=1.81437, aspect_ratio=2, k=2):
         self.initial_density = initial_density
         self.speed_of_sound = speed_of_sound
         self.mass = mass
