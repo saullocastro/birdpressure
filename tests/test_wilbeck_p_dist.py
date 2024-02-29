@@ -29,4 +29,3 @@ def test_wilbeck_p_dist():
     ax.set_ylim(ymin = 0)
     ax.legend()
     plt.show()
-

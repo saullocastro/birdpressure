@@ -40,7 +40,3 @@ def test_bird_radii_impact_duration():
     ax.set_xlim(xmin = 0)
     ax.set_ylim(ymin = 0)
     plt.show()
-
-
-
-

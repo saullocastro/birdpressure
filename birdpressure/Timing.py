@@ -202,7 +202,7 @@ class Timing():
 
         ax.plot(t_hist* 10 ** (3), f_hist * 10 ** (-3))
         ax.grid()
-        ax.set_xlabel(r'Time, [\mu s]', fontsize='xx-large')
+        ax.set_xlabel(r'Time, [$\mu s$]', fontsize='xx-large')
         ax.set_ylabel(r'Average Force [kN]', fontsize='xx-large')
         ax.set_xlim(xmin=0)
         ax.set_ylim(ymin=0)
