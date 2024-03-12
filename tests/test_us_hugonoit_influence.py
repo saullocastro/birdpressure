@@ -10,9 +10,10 @@ def test_us_hugonoit_influence():
     bird = Bird()
     scen = ImpactScenario(u0_range, 90, use_radian = False)
     tim = Timing(bird,scen)
+    tim_no_us = Timing(bird, scen, use_us=False)
 
     P_us = tim.det_peak_P()
-    P_u0 = tim.det_peak_P(use_us = False)
+    P_u0 = tim_no_us.det_peak_P()
 
     cm = 1/2.54
 
