@@ -23,6 +23,8 @@ class AnalBarber(Timing):
         impact_scenario: class
         grid: class
         eos: class
+        circular_cross_section: bool, default = False
+            boolean indicates whether circular or elliptical cross-section is used to determine average force values
         use_us: bool, default = True
             use shock velocity to determine peak pressure
         use_v_norm: bool, default = True
@@ -39,12 +41,12 @@ class AnalBarber(Timing):
             array with pressure coefficient over impact area [-]
         P: ndarray
             array with pressures over impact area [Pa]
-        f_steady_av: float or ndarray
-            average force exerted during steady state phase [N]
-        P_steady_av: float or ndarray
-            average force exerted during steady state phase [Pa]
         P_H: float or ndarray
             peak pressure (hugonoit pressure) [Pa]
+        P_steady_av: float or ndarray
+            average force exerted during steady state phase [Pa]
+        f_steady_av: float or ndarray
+            average force exerted during steady state phase [N]
         f_peak_av: float or ndarray
             force applied during hugonoit state [N]
         c_r: float or ndarray
@@ -59,9 +61,11 @@ class AnalBarber(Timing):
             pressure history time array [s]
         impulse_tot: float or ndarray
             total impulse over per impact [Ns]
+        p_hist: ndarray
+            pressure history array [Pa]
     """
 
-    def __init__(self, bird: Bird, impact_scenario: ImpactScenario, grid: GridGenerator, eos: EOS, initial_pressure = 101325, use_us = True, use_v_norm = True):
+    def __init__(self, bird: Bird, impact_scenario: ImpactScenario, grid: GridGenerator, eos: EOS, initial_pressure = 101325, circular_cross_section = False, use_us = True, use_v_norm = True):
         Timing.__init__(self, bird, impact_scenario, use_us, use_v_norm)
 
         
@@ -70,19 +74,20 @@ class AnalBarber(Timing):
         self.impact_scenario = impact_scenario
         self.grid = grid
         self.eos = eos
+        self.circular_cross_section = circular_cross_section
         self.use_us = use_us
         self.use_v_norm = use_v_norm
 
         self.U, self.V, self.W = self.get_UVW()
         self.c_p = 1 - (self.V ** 2 + self.W ** 2) / (self.impact_scenario.get_impact_velocity() ** 2)
         self.P = self.c_p * 1 / 2 * self.bird.get_density() * self.impact_scenario.get_impact_velocity() ** 2
-        self.f_steady_av, self.P_steady_av = self.get_averages()
         self.P_H = self.det_peak_P()
-        self.f_peak_av = self.P_H * np.pi * (self.bird.diameter/2)**2
+        self.P_steady_av,self.f_steady_av, self.f_peak_av = self.get_averages()
         self.c_r = self.eos.get_c_r(self.P_H)
         self.t_b = self.find_t_b(self.c_r)
         self.t_c = self.find_t_c(self.c_r)
         self.f_hist, self.t_hist, self.impulse_tot = self.find_force_history(self.f_peak_av, self.f_steady_av, self.c_r)
+        self.p_hist = np.array([self.P_H, self.P_H, self.P_steady_av, self.P_steady_av, 0])
 
 
 
@@ -211,16 +216,21 @@ class AnalBarber(Timing):
     def get_averages(self):
         """Function to compute steady state average values."""
 
+        if self.circular_cross_section:
+            impact_A = np.pi * (self.bird.diameter/2)**2
+        else:
+            impact_A = self.grid.exact_impact_area
+
         cell_area = self.grid.resolution**2
-        impact_area = cell_area*len(self.P)
         force = 0
 
         for pressure in self.P:
             force+= pressure*cell_area
 
-        average_P = force/impact_area
+        average_P = force/impact_A
+        peak_force_av  = self.P_H * impact_A
 
-        return force, average_P
+        return average_P, force, peak_force_av
 
     def show_averaged_force_history(self):
         """Function to plot force history"""
