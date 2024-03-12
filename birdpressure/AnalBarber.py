@@ -44,7 +44,7 @@ class AnalBarber(Timing):
         P_steady_av: float or ndarray
             average force exerted during steady state phase [Pa]
         P_H: float or ndarray
-            peak pressure (hugonoit pressure) [MPa]
+            peak pressure (hugonoit pressure) [Pa]
         f_peak_av: float or ndarray
             force applied during hugonoit state [N]
         c_r: float or ndarray
