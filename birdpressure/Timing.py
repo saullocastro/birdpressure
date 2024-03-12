@@ -130,7 +130,7 @@ class Timing():
             Returns
             -------
             P_H: float or ndarray
-                peak pressure [N/m^2]
+                peak pressure [Pa]
         """
         if self.use_v_norm:
             velocity = self.impact_scenario.get_normal_velocity()
