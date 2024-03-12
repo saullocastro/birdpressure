@@ -23,6 +23,10 @@ class AnalBarber(Timing):
         impact_scenario: class
         grid: class
         eos: class
+        use_us: bool, default = True
+            use shock velocity to determine peak pressure
+        use_v_norm: bool, default = True
+            use normal velocity component to determine peak pressure
         initial_pressure: int, default: 101325
             ambient pressure default at sea-level
         U: ndarray
@@ -57,8 +61,8 @@ class AnalBarber(Timing):
             total impulse over per impact [Ns]
     """
 
-    def __init__(self, bird: Bird, impact_scenario: ImpactScenario, grid: GridGenerator, eos: EOS, initial_pressure = 101325):
-        Timing.__init__(self, bird, impact_scenario)
+    def __init__(self, bird: Bird, impact_scenario: ImpactScenario, grid: GridGenerator, eos: EOS, initial_pressure = 101325, use_us = True, use_v_norm = True):
+        Timing.__init__(self, bird, impact_scenario, use_us, use_v_norm)
 
         
         self.initial_pressure = initial_pressure
@@ -66,13 +70,15 @@ class AnalBarber(Timing):
         self.impact_scenario = impact_scenario
         self.grid = grid
         self.eos = eos
+        self.use_us = use_us
+        self.use_v_norm = use_v_norm
 
         self.U, self.V, self.W = self.get_UVW()
         self.c_p = 1 - (self.V ** 2 + self.W ** 2) / (self.impact_scenario.get_impact_velocity() ** 2)
         self.P = self.c_p * 1 / 2 * self.bird.get_density() * self.impact_scenario.get_impact_velocity() ** 2
         self.f_steady_av, self.P_steady_av = self.get_averages()
         self.P_H = self.det_peak_P()
-        self.f_peak_av = self.P_H * self.grid.impact_area
+        self.f_peak_av = self.P_H * np.pi * (self.bird.diameter/2)**2
         self.c_r = self.eos.get_c_r(self.P_H)
         self.t_b = self.find_t_b(self.c_r)
         self.t_c = self.find_t_c(self.c_r)

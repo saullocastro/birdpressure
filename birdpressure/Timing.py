@@ -24,11 +24,18 @@ class Timing():
         shock wave velocity [m/s]
     t_D: float or ndarray
         total impact duration (squash time) [s]
+    use_us: bool, default = True
+        use shock velocity to determine peak pressure
+    use_v_norm: bool, default = True
+        use normal velocity component to determine peak pressure
     """
 
-    def __init__(self, bird: Bird, impact_scenario: ImpactScenario):
+
+    def __init__(self, bird: Bird, impact_scenario: ImpactScenario, use_us = True, use_v_norm = True):
         self.bird = bird
         self.impact_scenario = impact_scenario
+        self.use_us = use_us
+        self.use_v_norm = use_v_norm
 
 
         self.u_s = self.find_u_s()
@@ -110,7 +117,7 @@ class Timing():
             critical_aspect = self.u_s / (2* np.sqrt(release_wave_velocity ** 2 - (self.u_s - self.impact_scenario.get_impact_velocity()) ** 2))
             return critical_aspect
 
-    def det_peak_P(self, use_us = True, use_v_norm = True):
+    def det_peak_P(self):
         """ Compute peak pressure (hugonoit pressure)
 
             Parameters
@@ -124,13 +131,13 @@ class Timing():
             -------
             P_H: float or ndarray
                 peak pressure [N/m^2]
-
         """
-        if use_v_norm:
+        if self.use_v_norm:
             velocity = self.impact_scenario.get_normal_velocity()
         else:
             velocity = self.impact_scenario.get_impact_velocity()
-        if use_us:
+
+        if self.use_us:
             P_H = self.bird.get_density()*self.u_s*velocity
         else:
             P_H = self.bird.get_density()*self.bird.get_sound_speed()*velocity
@@ -142,6 +149,7 @@ class Timing():
             ----------
             release_wave_velocity: float or ndarray
                 release wave velocity (c_r) P vs rho slope at hugonoit pressure [m/s]
+
 
             Returns
             -------

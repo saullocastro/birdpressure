@@ -53,7 +53,9 @@ class GridGenerator:
     mesh_Y: ndarray
         array created by np.mesh() with y coordinates (n_elements, n_elements)
     impact_area: float
-        impact area [m]
+        numerically determined impact area [m^2]
+    exact_impact_area : float
+        exact impact area [m^2]
 
     Other Parameters
     ----------------
@@ -73,6 +75,7 @@ class GridGenerator:
         self.resolution =  2*self.maj_axis/self.n_elements
         self.mesh_X, self.mesh_Y = np.meshgrid(self.centers[:, 1], self.centers[:, 0])
         self.impact_area = self.ids.shape[0] * self.resolution**2
+        self.exact_impact_area = np.pi * self.min_axis * self.maj_axis
     def get_grid(self):
         """ This function generates the Grid
 

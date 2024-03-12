@@ -26,6 +26,12 @@ class AnalWilbeck(Timing):
         bird: class
         impact_scenario: class
         grid: class
+        circular_cross_section: bool, default = False
+            boolean indicates whether circular or elliptical cross-section is used to determine average force values
+        use_us: bool, default = True
+            use shock velocity to determine peak pressure
+        use_v_norm: bool, default = True
+            use normal velocity component to determine peak pressure
         u_s: float or ndarray
             shock wave velocity [m/s]
         P_H: float or ndarray
@@ -49,30 +55,32 @@ class AnalWilbeck(Timing):
 
     """
 
-    def __init__(self, bird: Bird, impact_scenario: ImpactScenario, grid: GridGenerator, eos: EOS,  initial_pressure = 101325):
-        Timing.__init__(self, bird, impact_scenario)
-
+    def __init__(self, bird: Bird, impact_scenario: ImpactScenario, grid: GridGenerator, eos: EOS,  initial_pressure = 101325, circular_cross_section = False, use_us = True, use_v_norm = True):
+        Timing.__init__(self, bird, impact_scenario, use_us, use_v_norm)
         self.initial_pressure = initial_pressure
         self.eos = eos
         self.bird = bird
         self.impact_scenario = impact_scenario
         self.grid = grid
+        self.circular_cross_section = circular_cross_section
+        self.use_us = use_us
+        self.use_v_norm = use_v_norm
 
         self.u_s = self.find_u_s()
         self.P_H = self.det_peak_P()
-        self.f_peak_av = self.P_H * self.grid.impact_area
+        self.f_peak_av = self.P_H * np.pi * (self.bird.diameter/2)**2
         self.c_r = self.eos.get_c_r(self.P_H)
         self.P_s = self.get_P_s()
         self.p_steady_av, self.f_steady_av = self.get_averages()
         self.f_hist, self.t_hist, self.impulse_tot = self.find_force_history(self.f_peak_av, self.f_steady_av, self.c_r)
 
-    def get_averages(self, circular_cross = True):
+    def get_averages(self):
         """Function to compute average pressure and force during steady state"""
 
-        if circular_cross:
+        if self.circular_cross_section:
             impact_A = np.pi * (self.bird.diameter/2)**2
         else:
-            impact_A = np.pi * self.grid.min_axis * self.grid.maj_axis
+            impact_A = self.grid.exact_impact_area
 
         P_avg = self.bird.get_density() * self.impact_scenario.get_impact_velocity()**2 * np.sin(self.impact_scenario.get_impact_angle())
         F_avg = P_avg * impact_A
