@@ -7,7 +7,7 @@ from birdpressure.AnalBarber import AnalBarber
 
 def test_barber_p_dist():
     bird_1 = Bird()
-    scenario = ImpactScenario(impact_velocity= 100, impact_angle=90, use_radian = False )
+    scenario = ImpactScenario(impact_velocity= 100, impact_angle=60, use_radian = False )
     grid = GridGenerator(bird_1,scenario,21)
     eos = EOS(bird_1, 'Polynomial_EOS')
 

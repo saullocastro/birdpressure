@@ -58,7 +58,7 @@ class AnalWilbeck(Timing):
     """
 
     def __init__(self, bird: Bird, impact_scenario: ImpactScenario, grid: GridGenerator, eos: EOS,  initial_pressure = 101325, circular_cross_section = False, use_us = True, use_v_norm = True):
-        Timing.__init__(self, bird, impact_scenario, use_us, use_v_norm)
+        Timing.__init__(self, bird, impact_scenario, use_us, use_v_norm, circular_cross_section = False)
         self.initial_pressure = initial_pressure
         self.eos = eos
         self.bird = bird

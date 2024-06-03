@@ -20,23 +20,25 @@ class Timing():
     ----------
     bird: class
     impact_scenario: class
-    u_s: float or ndarray
-        shock wave velocity [m/s]
-    t_D: float or ndarray
-        total impact duration (squash time) [s]
     use_us: bool, default = True
         use shock velocity to determine peak pressure
     use_v_norm: bool, default = True
         use normal velocity component to determine peak pressure
+    circular_cross_section: bool, default = False
+            boolean indicates whether circular or elliptical cross-section is used to determine average force values
+    u_s: float or ndarray
+        shock wave velocity [m/s]
+    t_D: float or ndarray
+        total impact duration (squash time) [s]
     """
 
 
-    def __init__(self, bird: Bird, impact_scenario: ImpactScenario, use_us = True, use_v_norm = True):
+    def __init__(self, bird: Bird, impact_scenario: ImpactScenario, use_us = True, use_v_norm = True, circular_cross_section = False):
         self.bird = bird
         self.impact_scenario = impact_scenario
         self.use_us = use_us
         self.use_v_norm = use_v_norm
-
+        self.circular_cross_section = circular_cross_section
 
         self.u_s = self.find_u_s()
         self.t_D = self.find_t_D()
@@ -92,7 +94,12 @@ class Timing():
             t_b: float or ndarray
                 peak impact pressure duration [s]
             """
-        self.t_b = self.bird.get_diameter()/(2 * release_wave_velocity )
+
+        if self.circular_cross_section:
+            self.t_b = self.bird.get_diameter()/(2 * release_wave_velocity )
+
+        else:
+            self.t_b = self.bird.get_length()/(2 * release_wave_velocity*np.sin(self.impact_scenario.get_impact_angle()) )
         return self.t_b
 
     def critical_aspect_ratio(self,release_wave_velocity):
