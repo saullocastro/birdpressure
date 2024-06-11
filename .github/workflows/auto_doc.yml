@@ -1,9 +1,10 @@
 name: doc
 
-on:
-  push:
-    tags:
-      - '*.*.*'
+# on:
+#  push:
+#    tags:
+#      - '*.*.*'
+on: [push]
 
 jobs:
   build-and-deploy:
